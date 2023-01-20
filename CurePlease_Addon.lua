@@ -69,7 +69,19 @@ function SendConfirmation()
   CP_connect:close()
 end
 
-ashita.register_event('incoming_packet', function(id, size, data)
+function mysplit(inputstr, sep)
+  if sep == nil then
+    sep = "%s"
+  end
+  local t={}
+  for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+    table.insert(t, str)
+  end
+  return t
+end
+
+
+ashita.events.register('packet_in', 'listener1', function(id, size, data)
 
   casting = nil
 
@@ -109,10 +121,11 @@ ashita.register_event('incoming_packet', function(id, size, data)
   return false;
 end);
 
-ashita.register_event('command', function(command, ntype)
+ashita.events.register('command', 'command1', function(command)
   -- Get the arguments of the command..
-  local args = command:args();
-  if (args[1]:lower() ~= '/cpaddon') then
+  local args = mysplit(command.command);
+
+  if (args[1] ~= '/cpaddon') then
     return false;
   end
 
