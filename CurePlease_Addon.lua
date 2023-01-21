@@ -20,7 +20,7 @@ end
 
 function Run_Buff_Function(id, data)
   for k = 0, 4 do
-    local Uid = struct.unpack('H', data, 8 + 1 + (k * 0x30))
+    local Uid = struct.unpack('H', data,  8 + 1 + (k * 0x30));
     if Uid ~= 0 and Uid ~= nil then
       userIndex = Uid
     else
@@ -33,7 +33,7 @@ function Run_Buff_Function(id, data)
     intIndex = 1
     -- GRAB THE MEMBERS NAME
     if userIndex ~= nil then
-      CharacterName = AshitaCore:GetDataManager():GetEntity():GetName(userIndex)
+      CharacterName = AshitaCore:GetMemoryManager():GetEntity():GetName(userIndex)
     end
     if CharacterName ~= nil then
       for i = 1, 32 do
@@ -81,27 +81,26 @@ function mysplit(inputstr, sep)
 end
 
 
-ashita.events.register('packet_in', 'listener1', function(id, size, data)
+ashita.events.register('packet_in', 'listener1', function(e)
 
   casting = nil
 
-  if id == 0xB then
+  if e.id == 0xB then
     zoning_bool = true
-  elseif id == 0xA and zoning_bool then
+  elseif e.id == 0xA and zoning_bool then
     zoning_bool = false
   end
   if not zoning_bool then
-
-    if id == 0x28 then
-      local actor = struct.unpack('I', data, 6);
-      local category = ashita.bits.unpack_be(data, 82, 4);
-      if actor == AshitaCore:GetDataManager():GetParty():GetMemberServerId(0) then
+    if e.id == 0x28 then
+      local actor = ashita.bits.unpack_be(e.data_modified:totable(), 40, 32)
+      local category = ashita.bits.unpack_be(e.data_modified:totable(), 82, 4)
+      if actor == AshitaCore:GetMemoryManager():GetParty():GetMemberServerId(0) then
         if category == 4 then
           casting = 'CUREPLEASE_casting_finished'
         elseif category == 8 then
-          if ashita.bits.unpack_be(data, 86, 16) == 28787 then
+          if ashita.bits.unpack_be(e.data_raw, 10, 6, 16) == 28787 then
             casting = 'CUREPLEASE_casting_interrupted'
-          elseif ashita.bits.unpack_be(data, 86, 16) == 24931 then
+          elseif ashita.bits.unpack_be(e.data_raw, 10, 6, 16) == 24931 then
             casting = 'CUREPLEASE_casting_blocked'
           end
         end
@@ -114,8 +113,8 @@ ashita.events.register('packet_in', 'listener1', function(id, size, data)
         end
 
       end
-    elseif id == 0x076 then
-      Run_Buff_Function(id, data)
+    elseif e.id == 0x076 then
+      Run_Buff_Function(e.id, e.data)
     end
   end
   return false;
